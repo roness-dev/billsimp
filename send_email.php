@@ -7,24 +7,25 @@ require_once "includes/db.php";
 $user_id = intval($_SESSION['user_id']);
 $success = $error = '';
 
-// Handle sending email
+// Handle email sending
 if (isset($_POST['send_email'])) {
-    $client_email = $conn->real_escape_string($_POST['client_email']);
-    $subject      = $conn->real_escape_string($_POST['subject']);
-    $message      = $conn->real_escape_string($_POST['message']);
+    $recipient = $conn->real_escape_string($_POST['recipient']);
+    $subject = $conn->real_escape_string($_POST['subject']);
+    $message = $conn->real_escape_string($_POST['message']);
 
-    if (empty($client_email) || empty($subject) || empty($message)) {
+    if (empty($recipient) || empty($subject) || empty($message)) {
         $error = "All fields are required.";
     } else {
-        $stmt = $conn->prepare("INSERT INTO email_logs (user_id, client_email, subject, message, sent_at) VALUES (?, ?, ?, ?, NOW())");
-        $stmt->bind_param("isss", $user_id, $client_email, $subject, $message);
+        // Insert email log (replace with actual sending logic)
+        $stmt = $conn->prepare("INSERT INTO email_logs (user_id, recipient, subject, message, sent_at) VALUES (?, ?, ?, ?, NOW())");
+        $stmt->bind_param("isss", $user_id, $recipient, $subject, $message);
         if ($stmt->execute()) $success = "Email sent successfully!";
         else $error = "Error sending email: " . $conn->error;
     }
 }
 
 // Fetch recent emails
-$recentEmails = $conn->query("SELECT client_email, subject, sent_at FROM email_logs WHERE user_id=$user_id ORDER BY sent_at DESC LIMIT 5");
+$recentEmails = $conn->query("SELECT recipient, subject, sent_at FROM email_logs WHERE user_id=$user_id ORDER BY sent_at DESC LIMIT 5");
 ?>
 
 <!DOCTYPE html>
@@ -51,6 +52,7 @@ body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verda
 .form-control, .form-select { border-radius: 8px; }
 .alert { border-radius: 8px; }
 .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 15px; color:#1f2937; }
+h4 { font-weight:600; color:#1f2937; }
 </style>
 </head>
 <body>
@@ -86,7 +88,7 @@ body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verda
           <form method="POST">
             <div class="mb-3">
               <label>Recipient Email</label>
-              <input type="email" name="client_email" class="form-control" placeholder="recipient@example.com" required>
+              <input type="email" name="recipient" class="form-control" placeholder="recipient@example.com" required>
             </div>
             <div class="mb-3">
               <label>Subject</label>
@@ -117,7 +119,7 @@ body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verda
                 if ($recentEmails->num_rows > 0) {
                     while ($row = $recentEmails->fetch_assoc()) {
                         echo "<tr>
-                            <td>".htmlspecialchars($row['client_email'])."</td>
+                            <td>".htmlspecialchars($row['recipient'])."</td>
                             <td>".htmlspecialchars($row['subject'])."</td>
                             <td>".htmlspecialchars($row['sent_at'])."</td>
                         </tr>";
